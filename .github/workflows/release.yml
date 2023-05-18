@@ -20,7 +20,6 @@ jobs:
           certutil -decode (Join-Path $tmpFolder "code_signing.b64") (Join-Path $tmpFolder "code_signing.pfx")
           $codeCertificate  = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2((Join-path $tmpFolder "code_signing.pfx") , "${{ secrets.SIGN_PFX_KEY }}")
           Set-AuthenticodeSignature -FilePath ".\target\release\rustypwneddownloader.exe"  -Certificate $codeCertificate -TimeStampServer "http://timestamp.digicert.com"
-          Remove-Item -Recurse "$tmpFolder" -Force
       shell: powershell
     - name: Upload Release
       uses: softprops/action-gh-release@v1
