@@ -8,7 +8,8 @@ use std::io::{BufWriter, Write};
 
 const APIURL: &str = "https://api.pwnedpasswords.com/range/";
 const PARALLEL: usize = 16;
-const RANGEEND: usize = 0xFF; // Use for development to reduce impact
+// const RANGEEND: usize = 0xFF; // Use for development to reduce impact
+const RANGEEND: usize = 0xFFFFF; // Production value
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
