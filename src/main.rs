@@ -1,11 +1,14 @@
 #![deny(unsafe_code)]
 
 use clap::Parser;
+use futures::{stream, StreamExt};
 use reqwest::Client;
 use std::fs::File;
 use std::io::{BufWriter, Write};
 
 const APIURL: &str = "https://api.pwnedpasswords.com/range/";
+const PARALLEL: usize = 16;
+const RANGEEND: usize = 0xFF; // Use for development to reduce impact
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -19,7 +22,8 @@ struct Args {
     minimum: u8,
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let args = Args::parse();
     println!(
         "Downloading to filename {}, with minimum count {}",
@@ -36,21 +40,47 @@ fn main() {
     let mut file = BufWriter::new(file);
     // Creating a reqwest client once and reusing it should reduce connection setup time
     let rclient = reqwest::Client::new();
+    download_files(&rclient, &mut file, args.minimum).await;
+}
 
-    for n in 0..=0xFF {
-        let range = format!("{n:05X}");
-        // Status updates
-        if n % 0xF == 0 {
-            println!("Processing range: {range}");
+async fn download_files(
+    rclient: &Client,
+    file: &mut std::io::BufWriter<std::fs::File>,
+    minimum: u8,
+) {
+    for n in (0..=RANGEEND).step_by(PARALLEL) {
+        let mut ranges: Vec<String> = vec![];
+        for i in 0..PARALLEL {
+            ranges.push(format!("{:05X}", n + i));
         }
-        let pwnlist = get_pwn_url(&rclient, &format!("{APIURL}{range}?mode=ntlm")).unwrap();
-        let filtered_pwnlist = filter_list(&range, &pwnlist, args.minimum);
-        write!(file, "{filtered_pwnlist}").unwrap();
+        // Status updates
+        println!("Processing range: {}", ranges[0]);
+        let bodies = stream::iter(ranges)
+            .map(|range| {
+                let rclient = rclient.clone();
+                let url = format!("{APIURL}{range}?mode=ntlm");
+
+                tokio::spawn(async move { 
+                    let pwnlist = get_pwn_url(&rclient, &url).await.unwrap();
+                    filter_list(&range, &pwnlist, minimum)
+                 })
+            })
+            .buffered(PARALLEL)
+            .map(|r| match r {
+                Ok(rr) => rr,
+                Err(_) => String::from("Bad"),
+            })
+            .collect::<Vec<_>>();
+
+        let out: String = bodies.await.iter().flat_map(|s| s.chars()).collect();
+        write!(file, "{out}").unwrap();
     }
 }
 
-#[tokio::main]
-async fn get_pwn_url(rclient: &Client, url: &str) -> Result<String, Box<dyn std::error::Error>> {
+async fn get_pwn_url(
+    rclient: &Client,
+    url: &str,
+) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
     let resp = rclient.get(url).send().await?.text().await?;
     Ok(resp)
 }
