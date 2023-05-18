@@ -26,4 +26,4 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/')
       with:
         files: |
-          .\target\release\rustypwneddownloader.exe
+          ./target/release/rustypwneddownloader.exe
