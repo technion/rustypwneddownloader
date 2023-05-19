@@ -55,7 +55,9 @@ async fn download_files(
             ranges.push(format!("{:05X}", n + i));
         }
         // Status updates
-        println!("Processing range: {}", ranges[0]);
+        if (n % 0xFF0) == 0 {
+            println!("Processing range: {}", ranges[0]);
+        }
         let bodies = stream::iter(ranges)
             .map(|range| {
                 let rclient = rclient.clone();
