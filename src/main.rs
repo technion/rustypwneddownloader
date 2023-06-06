@@ -52,7 +52,7 @@ async fn download_files(
     for n in (0..=RANGEEND).step_by(PARALLEL) {
         let mut ranges: Vec<String> = vec![];
         for i in 0..PARALLEL {
-            ranges.push(format!("{:05X}", n + i));
+            ranges.push(format!("{:05X}", n.checked_add(i).unwrap()));
         }
         // Status updates
         if (n % 0xFF0) == 0 {

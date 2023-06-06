@@ -22,4 +22,4 @@ jobs:
     - name: Run tests
       run: cargo test --verbose
     - name: Run Linter
-      run: cargo clippy -- -W clippy::pedantic -Dwarnings
+      run: cargo clippy -- -W clippy::pedantic -W clippy::integer_arithmetic -Dwarnings
