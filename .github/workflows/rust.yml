@@ -24,4 +24,4 @@ jobs:
     - name: Run Linter
       run: cargo clippy -- -W clippy::pedantic -W clippy::integer_arithmetic -Dwarnings
     - name: Cargo Deny
-    - uses: EmbarkStudios/cargo-deny-action@v1
+      uses: EmbarkStudios/cargo-deny-action@v1
