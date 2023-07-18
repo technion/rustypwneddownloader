@@ -24,6 +24,25 @@ Options:
   -V, --version              Print version
 ```
 
+## Verifying Builds
+All releases are Authenticode signed. You can verify this as below:
+```
+PS > Get-AuthenticodeSignature .\rustypwneddownloader.exe
+
+
+    Directory: Downloads
+
+
+SignerCertificate                         Status                                 Path
+-----------------                         ------                                 ----
+9C74A96F12A82D4AE8E23E7214D21033D81705A2  Valid                                  rustypwneddownloader.exe
+```
+
+In addition, for complete supply chain transparency all releases are signed with [SigStore](https://sigstore.dev/). If you have downloaded the cosign executable, you can verify a download with:
+```
+.\cosign-windows-amd64.exe verify-blob .\rustypwneddownloader.exe --bundle .\cosign<version>.bundle --certificate-oidc-issuer=https://github.com/login/oauth --certificate-identity=technion@lolware.net
+```
+
 ## References
 This issue describes a shell script version on which this app was based.
 https://github.com/HaveIBeenPwned/PwnedPasswordsDownloader/issues/30
